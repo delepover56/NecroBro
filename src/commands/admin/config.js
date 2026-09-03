@@ -40,13 +40,13 @@ function automodSummary(guildId) {
 }
 
 module.exports = {
-  name: 'config',
+  name: 'status',
   aliases: ['settings'],
   category: 'admin',
-  description: 'Show the current bot configuration for this server.',
+  description: 'Show the current bot configuration and feature status for this server.',
   permission: 'admin',
   args: [],
-  examples: ['config'],
+  examples: ['status'],
   async execute(ctx) {
     const { guild } = ctx;
     const settings = settingsRepository.ensureSettings(guild.id);
