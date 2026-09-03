@@ -22,6 +22,11 @@ test('prefix defaults to ? and is stored per guild', () => {
   assert.equal(settingsRepository.getPrefix('g2'), DEFAULT_PREFIX);
 });
 
+test('giveaway channel is persisted in guild settings', () => {
+  settingsRepository.updateSettings('g1', { giveaway_channel_id: '123456789012345678' });
+  assert.equal(settingsRepository.getSettings('g1').giveaway_channel_id, '123456789012345678');
+});
+
 test('validatePrefix rejects ambiguous or dangerous prefixes', () => {
   assert.equal(validatePrefix('!'), null);
   assert.equal(validatePrefix('?'), null);
@@ -63,6 +68,7 @@ test('every command module loads, validates, and produces a slash payload', () =
     assert.ok(command, `${name} missing`);
     assert.equal(command.permission, 'admin', `${name} must be admin-only`);
   }
+  assert.equal(registry.get('setgiveawaychannel').permission, 'admin');
   assert.equal(registry.get('help').permission, 'everyone');
   assert.equal(registry.get('vote').permission, 'everyone');
   // The same registered command objects produce slash payloads and are used by

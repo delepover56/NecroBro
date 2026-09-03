@@ -4,21 +4,12 @@ const { EmbedBuilder } = require('discord.js');
 
 const { BRAND } = require('../../config');
 const giveawayService = require('../../services/giveawayService');
+const settingsRepository = require('../../database/settings');
 const { discordTime, sanitize } = require('../../utils/format');
 
 const { GiveawayError, LIMITS, TYPES } = giveawayService;
 
 const TYPE_CHOICES = Object.values(TYPES).map((type) => ({ name: type.label, value: type.key }));
-
-/** `Discord Nitro #giveaways` -> `{ prize: 'Discord Nitro', channelId: '...' }` */
-const TRAILING_CHANNEL = /\s*<#(\d{15,21})>\s*$/;
-
-function splitPrize(text) {
-  const raw = String(text ?? '').trim();
-  const match = raw.match(TRAILING_CHANNEL);
-  if (!match) return { prize: raw, channelId: null };
-  return { prize: raw.slice(0, match.index).trim(), channelId: match[1] };
-}
 
 function mentions(ids) {
   return ids.map((id) => `<@${id}>`).join(', ');
@@ -44,7 +35,7 @@ module.exports = {
   subcommands: [
     {
       name: 'create',
-      description: 'Start a giveaway here. End the prize with #channel to post it elsewhere.',
+      description: 'Start a giveaway in the configured giveaway channel.',
       aliases: ['start', 'new'],
       args: [
         {
@@ -71,9 +62,9 @@ module.exports = {
         {
           name: 'prize',
           type: 'text',
-          description: 'What is being given away. Add #channel at the end to post there.',
+          description: 'What is being given away.',
           required: true,
-          max: LIMITS.prizeMax + 32,
+          max: LIMITS.prizeMax,
         },
       ],
     },
@@ -144,19 +135,18 @@ async function create(ctx) {
   const type = String(ctx.get('type') ?? '').toUpperCase();
   const durationMs = ctx.get('duration');
   const winnerCount = ctx.get('winners');
-  const { prize, channelId } = splitPrize(ctx.get('prize'));
+  const prize = String(ctx.get('prize') ?? '').trim();
 
   if (!prize) throw new GiveawayError('Please tell me what the prize is.');
   if (prize.length > LIMITS.prizeMax) {
     throw new GiveawayError(`The prize must be ${LIMITS.prizeMax} characters or fewer.`);
   }
 
-  let channel = ctx.channel;
-  if (channelId) {
-    channel = ctx.guild.channels.cache.get(channelId) ?? (await ctx.guild.channels.fetch(channelId).catch(() => null));
-    if (!channel || !channel.isTextBased?.() || channel.isThread?.()) {
-      throw new GiveawayError('That channel does not exist or is not a text channel I can post in.');
-    }
+  const channelId = settingsRepository.ensureSettings(ctx.guildId).giveaway_channel_id;
+  if (!channelId) throw new GiveawayError('No giveaway channel is configured. An Admin must run `setgiveawaychannel #channel` first.');
+  const channel = ctx.guild.channels.cache.get(channelId) ?? (await ctx.guild.channels.fetch(channelId).catch(() => null));
+  if (!channel || !channel.isTextBased?.() || channel.isThread?.()) {
+    throw new GiveawayError('The configured giveaway channel was deleted or is unavailable. An Admin must set it again.');
   }
 
   await ctx.defer({ ephemeral: true });

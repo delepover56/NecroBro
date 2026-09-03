@@ -13,6 +13,7 @@ const UPDATABLE = new Set([
   'prefix',
   'welcome_channel_id',
   'modlog_channel_id',
+  'giveaway_channel_id',
   'currency_name',
   'currency_symbol',
   'economy_enabled',

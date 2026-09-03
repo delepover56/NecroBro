@@ -112,6 +112,36 @@ async function notifyWinners(client, row, winners, { reroll = false } = {}) {
   return { delivered, failed: results.length - delivered };
 }
 
+/** Best-effort notice for a prior winner who was displaced by a reroll. */
+async function notifyRerolledOut(client, row, previousWinners, newWinners) {
+  const newWinnerIds = new Set(newWinners);
+  const displaced = previousWinners.filter((id) => !newWinnerIds.has(id));
+  if (displaced.length === 0) return { delivered: 0, failed: 0 };
+
+  const results = await Promise.all(displaced.map(async (userId) => {
+    try {
+      const user = client.users?.cache?.get(userId) ?? (await client.users?.fetch?.(userId));
+      if (!user?.send || user.bot) return false;
+      const embed = new EmbedBuilder()
+        .setColor(BRAND.neutralColor)
+        .setTitle('Giveaway rerolled')
+        .setDescription(
+          `The **${sanitize(row.prize, LIMITS.prizeMax)}** giveaway in **${client.guilds?.cache?.get(row.guild_id)?.name ?? 'the server'}** was rerolled, and another winner was selected.\n` +
+          `**Giveaway:** #${row.id}`,
+        )
+        .setFooter({ text: `${BRAND.name} • Contact staff if you have questions.` })
+        .setTimestamp(new Date());
+      await user.send({ embeds: [embed], allowedMentions: { parse: [] } });
+      return true;
+    } catch (error) {
+      log.debug(`Could not DM rerolled giveaway #${row.id} prior winner ${userId}: ${error?.message ?? error}`);
+      return false;
+    }
+  }));
+  const delivered = results.filter(Boolean).length;
+  return { delivered, failed: results.length - delivered };
+}
+
 /* ------------------------------------------------------------------ *
  * Rendering
  * ------------------------------------------------------------------ */
@@ -624,6 +654,7 @@ async function cancelGiveaway({ client, giveawayId, guildId = null, by = null, n
  */
 async function rerollGiveaway({ client, giveawayId, guildId = null, by = null, count = 1 }) {
   const row = requireGiveaway(giveawayId, guildId);
+  const previousWinnerIds = [...row.winners];
   if (row.status === STATUS.ACTIVE) {
     throw new GiveawayError(`Giveaway **#${row.id}** is still running. End it first with \`giveaway end ${row.id}\`.`);
   }
@@ -679,8 +710,9 @@ async function rerollGiveaway({ client, giveawayId, guildId = null, by = null, c
   }
 
   const winnerDms = await notifyWinners(client, result.row, result.winners, { reroll: true });
+  const displacedDms = await notifyRerolledOut(client, result.row, previousWinnerIds, result.winners);
 
-  return { row: result.row, winners: result.winners, participantCount: result.participants.length, announced, winnerDms };
+  return { row: result.row, winners: result.winners, participantCount: result.participants.length, announced, winnerDms, displacedDms };
 }
 
 /* ------------------------------------------------------------------ *
@@ -757,6 +789,7 @@ module.exports = {
   buildMessagePayload,
   buildAnnouncement,
   notifyWinners,
+  notifyRerolledOut,
   pickWinners,
   previousWinners,
   createGiveaway,

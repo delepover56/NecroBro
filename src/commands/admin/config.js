@@ -67,6 +67,7 @@ module.exports = {
             `**Prefix:** \`${settings.prefix}\`\n` +
             `**Welcome channel:** ${describeChannel(guild, settings.welcome_channel_id)}\n` +
             `**Mod-log channel:** ${describeChannel(guild, settings.modlog_channel_id)}\n` +
+            `**Giveaway channel:** ${describeChannel(guild, settings.giveaway_channel_id)}\n` +
             `**Server owner:** <@${guild.ownerId}>`,
         },
         { name: 'Logical roles', value: roleLines.join('\n') },
@@ -97,7 +98,7 @@ module.exports = {
         },
         { name: 'Automod', value: automodSummary(guild.id) },
       )
-      .setFooter({ text: 'Fix roles with setrole • channels with setwelcome / setmodlog / setup-suggestions' });
+      .setFooter({ text: 'Fix roles with setrole • channels with setwelcome / setmodlog / setgiveawaychannel' });
 
     return ctx.reply({ embeds: [embed], ephemeral: true, allowedMentions: { parse: [] } });
   },

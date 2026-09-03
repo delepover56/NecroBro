@@ -360,6 +360,13 @@ const MIGRATIONS = [
       );
     },
   },
+  {
+    version: 4,
+    name: 'giveaway_channel_setting',
+    up(db) {
+      db.exec('ALTER TABLE guild_settings ADD COLUMN giveaway_channel_id TEXT');
+    },
+  },
 ];
 
 /** Applies every migration that has not yet run against `db`. */
