@@ -160,6 +160,126 @@ const IDS = {
   FIELD_STAFF_RESPONSE: 'staff_response',
 };
 
+/* ------------------------------------------------------------------ *
+ * Bot-wide (non-suggestion) configuration
+ * ------------------------------------------------------------------ */
+
+/** Default prefix for text commands when a guild has not chosen one. */
+const DEFAULT_PREFIX = '?';
+const PREFIX_MAX_LENGTH = 5;
+
+/**
+ * Permission levels, lowest to highest. A command declares the minimum level
+ * it needs; `utils/permissions.js` resolves a member's level from the
+ * configured logical roles (never from Discord's Administrator flag).
+ */
+const PERMISSION_LEVELS = {
+  everyone: { key: 'everyone', rank: 0, label: 'Everyone' },
+  moderator: { key: 'moderator', rank: 1, label: 'Moderator' },
+  admin: { key: 'admin', rank: 2, label: 'Admin' },
+  owner: { key: 'owner', rank: 3, label: 'Server Owner' },
+};
+
+/**
+ * Logical role types. The database maps each type to a real Discord role ID
+ * per guild; adding a type here makes it available to `/setrole` immediately.
+ */
+const ROLE_TYPES = {
+  ADMIN: { key: 'ADMIN', label: 'Admin', emoji: '👑', description: 'Full bot access.' },
+  MODERATOR: {
+    key: 'MODERATOR',
+    label: 'Moderator',
+    emoji: '🛡️',
+    description: 'Limited moderation commands.',
+  },
+  MEMBER: { key: 'MEMBER', label: 'Member', emoji: '👤', description: 'Assigned on join.' },
+  SURVIVAL: {
+    key: 'SURVIVAL',
+    label: 'Survival',
+    emoji: '⛏️',
+    description: 'Assigned on join (Minecraft access).',
+  },
+  MUTE: { key: 'MUTE', label: 'Mute', emoji: '🔇', description: 'Applied by /mute.' },
+};
+
+/** Resolves a user-supplied role type ("admin", "Mute", ...) to its definition. */
+function getRoleType(input) {
+  const key = String(input ?? '').trim().toUpperCase();
+  return ROLE_TYPES[key] ?? null;
+}
+
+/**
+ * Initial role mapping for the home guild. Applied ONCE, the first time the
+ * bot sees the guild with no mappings stored; after that the database is the
+ * only source of truth and `/setrole` replaces any of these freely.
+ */
+const SEED_ROLES = {
+  ADMIN: '1541167442791768187',
+  MODERATOR: '1541173765004861621',
+  MEMBER: '1541172960428040313',
+  SURVIVAL: '1545160149834924132',
+  MUTE: '1545160047808614400',
+};
+
+/** Help categories. Each command declares one `category` key. */
+const COMMAND_CATEGORIES = {
+  general: { key: 'general', emoji: '🏠', label: 'General', order: 0 },
+  suggestions: { key: 'suggestions', emoji: '💡', label: 'Suggestions', order: 1 },
+  giveaways: { key: 'giveaways', emoji: '🎉', label: 'Giveaways', order: 2 },
+  economy: { key: 'economy', emoji: '💰', label: 'Economy', order: 3 },
+  leaderboards: { key: 'leaderboards', emoji: '🏆', label: 'Leaderboards', order: 4 },
+  moderation: { key: 'moderation', emoji: '🛡️', label: 'Moderation', order: 5 },
+  admin: { key: 'admin', emoji: '⚙️', label: 'Administration', order: 6 },
+  automod: { key: 'automod', emoji: '🤖', label: 'Automod', order: 7 },
+};
+
+/** Minecraft server-list voting links shown by `/vote`. */
+const VOTE_LINKS = [
+  { label: 'Vote #1', url: 'https://www.minecraftiplist.com/server/NekroLand-44215/vote' },
+  { label: 'Vote #2', url: 'https://minecraftservers.org/vote/692286' },
+  { label: 'Vote #3', url: 'https://minecraft-mp.com/server/363060/vote/' },
+  { label: 'Vote #4', url: 'https://minecraft.buzz/vote/nekro-land' },
+  { label: 'Vote #5', url: 'https://minecraft-serverlist.com/server/6241/vote' },
+];
+
+/** Economy defaults (per-guild overrides live in `guild_settings`). */
+const ECONOMY_DEFAULTS = {
+  currencyName: 'Nekro Coins',
+  currencySymbol: '💰',
+  chatXpMin: 15,
+  chatXpMax: 25,
+  chatCashMin: 1,
+  chatCashMax: 5,
+  chatCashChance: 0.35,
+  chatCooldownSeconds: 60,
+  chatMinLength: 5,
+  dailyAmount: 500,
+  dailyStreakBonus: 50,
+  dailyStreakMax: 7,
+  workMin: 150,
+  workMax: 400,
+  workCooldownSeconds: 60 * 60,
+  begMin: 10,
+  begMax: 80,
+  begCooldownSeconds: 5 * 60,
+  begFailChance: 0.3,
+  minigameCooldownSeconds: 30,
+  minBet: 10,
+  maxBet: 50_000,
+};
+
+/** How often (ms) the background scheduler checks for expired mutes/bans/giveaways. */
+const SCHEDULER_INTERVAL_MS = 15_000;
+
+/** Namespaces for component custom IDs owned by each feature. */
+const COMPONENT_NAMESPACES = {
+  suggestions: 'sg',
+  help: 'help',
+  leaderboard: 'lb',
+  giveaway: 'gw',
+  moderation: 'mod',
+};
+
 module.exports = {
   env,
   BRAND,
@@ -172,4 +292,15 @@ module.exports = {
   CHANNEL_NAMES,
   TEMP_CHANNEL_CLEANUP_DELAY_MS,
   IDS,
+  DEFAULT_PREFIX,
+  PREFIX_MAX_LENGTH,
+  PERMISSION_LEVELS,
+  ROLE_TYPES,
+  getRoleType,
+  SEED_ROLES,
+  COMMAND_CATEGORIES,
+  VOTE_LINKS,
+  ECONOMY_DEFAULTS,
+  SCHEDULER_INTERVAL_MS,
+  COMPONENT_NAMESPACES,
 };

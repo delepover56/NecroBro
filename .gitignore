@@ -1,4 +1,5 @@
 .env
+*.zip
 node_modules/
 *.db
 *.db-shm

@@ -1,7 +1,7 @@
 {
   "name": "nekrobro",
   "version": "1.0.0",
-  "description": "Nekro Land suggestion system Discord bot",
+  "description": "NekroBro — Nekro Land Discord bot: suggestions, moderation, giveaways, economy, leaderboards, automod",
   "main": "src/index.js",
   "type": "commonjs",
   "engines": {
@@ -13,13 +13,18 @@
     "deploy": "node --disable-warning=ExperimentalWarning src/deploy-commands.js",
     "deploy:global": "node --disable-warning=ExperimentalWarning src/deploy-commands.js --global",
     "lint": "node --check src/index.js && node -e \"require('node:fs').readdirSync('src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('node:child_process').execFileSync(process.execPath,['--check','src/'+f]));console.log('syntax OK')\"",
-    "deploy:clear": "node --disable-warning=ExperimentalWarning src/deploy-commands.js --clear"
+    "deploy:clear": "node --disable-warning=ExperimentalWarning src/deploy-commands.js --clear",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.js\"",
+    "check": "npm run lint && npm test"
   },
   "keywords": [
     "discord",
     "discord.js",
-    "suggestions",
-    "minecraft"
+    "minecraft",
+    "moderation",
+    "giveaways",
+    "economy",
+    "suggestions"
   ],
   "author": "",
   "license": "ISC",
