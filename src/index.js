@@ -63,6 +63,7 @@ function optional(modulePath) {
 const automodService = optional('./services/automodService');
 const economyService = optional('./services/economyService');
 const giveawayService = optional('./services/giveawayService');
+const goodbyeService = require('./services/goodbyeService');
 
 /* ------------------------------------------------------------------ *
  * Restart recovery
@@ -103,6 +104,7 @@ async function recoverGuild(guild) {
   const settings = settingsRepository.getSettings(guild.id);
   for (const [column, label] of [
     ['welcome_channel_id', 'welcome channel'],
+    ['goodbye_channel_id', 'goodbye channel'],
     ['modlog_channel_id', 'mod-log channel'],
   ]) {
     if (settings?.[column] && !(await channelService.fetchChannel(guild, settings[column]))) {
@@ -204,10 +206,15 @@ client.on(Events.GuildMemberAdd, async (member) => {
   }
 });
 
-client.on(Events.GuildMemberRemove, (member) => {
+client.on(Events.GuildMemberRemove, async (member) => {
   const mute = moderationService.getActiveMute(member.guild.id, member.id);
   if (mute) {
     log.info(`${member.id} left ${member.guild.id} while muted; mute stays active until ${mute.mute_until ? new Date(mute.mute_until).toISOString() : 'unmuted'}.`);
+  }
+  try {
+    await goodbyeService.sendGoodbye(member);
+  } catch (error) {
+    log.error(`Goodbye handling failed for ${member.id}:`, error);
   }
 });
 
@@ -241,6 +248,7 @@ client.on(Events.ChannelDelete, (channel) => {
     if (settings) {
       const patch = {};
       if (settings.welcome_channel_id === channel.id) patch.welcome_channel_id = null;
+      if (settings.goodbye_channel_id === channel.id) patch.goodbye_channel_id = null;
       if (settings.modlog_channel_id === channel.id) patch.modlog_channel_id = null;
       if (Object.keys(patch).length > 0) {
         settingsRepository.updateSettings(channel.guild.id, patch);

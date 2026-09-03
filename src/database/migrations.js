@@ -374,6 +374,13 @@ const MIGRATIONS = [
       db.exec('ALTER TABLE guild_settings ADD COLUMN welcome_image_url TEXT');
     },
   },
+  {
+    version: 6,
+    name: 'goodbye_channel_setting',
+    up(db) {
+      db.exec('ALTER TABLE guild_settings ADD COLUMN goodbye_channel_id TEXT');
+    },
+  },
 ];
 
 /** Applies every migration that has not yet run against `db`. */

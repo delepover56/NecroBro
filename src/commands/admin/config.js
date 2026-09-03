@@ -66,6 +66,7 @@ module.exports = {
           value:
             `**Prefix:** \`${settings.prefix}\`\n` +
             `**Welcome channel:** ${describeChannel(guild, settings.welcome_channel_id)}\n` +
+            `**Goodbye channel:** ${describeChannel(guild, settings.goodbye_channel_id)}\n` +
             `**Welcome image/GIF:** ${settings.welcome_image_url ? '✅ configured' : '❌ not set'}\n` +
             `**Mod-log channel:** ${describeChannel(guild, settings.modlog_channel_id)}\n` +
             `**Giveaway channel:** ${describeChannel(guild, settings.giveaway_channel_id)}\n` +

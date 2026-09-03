@@ -63,7 +63,7 @@ test('every command module loads, validates, and produces a slash payload', () =
   assert.equal(registry.get('nope'), null);
 
   // Configuration commands are admin-only (never moderator/everyone).
-  for (const name of ['setprefix', 'setrole', 'setwelcome', 'setwelcomeimage', 'setmodlog', 'config', 'status', 'setup-suggestions']) {
+  for (const name of ['setprefix', 'setrole', 'setwelcome', 'setwelcomeimage', 'setgoodbye', 'setmodlog', 'config', 'status', 'setup-suggestions']) {
     const command = registry.get(name);
     assert.ok(command, `${name} missing`);
     assert.equal(command.permission, 'admin', `${name} must be admin-only`);

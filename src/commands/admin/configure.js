@@ -86,12 +86,13 @@ module.exports = {
   subcommands: [
     prefix,
     channelSubcommand('welcome', 'Choose the channel for welcome messages', 'welcome_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
+    channelSubcommand('goodbye', 'Choose the channel for goodbye messages', 'goodbye_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
     channelSubcommand('modlog', 'Choose the channel for moderation logs', 'modlog_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
     channelSubcommand('giveaway-channel', 'Choose the channel used for giveaways', 'giveaway_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
     welcomeImage,
     role,
   ],
-  examples: ['config prefix !', 'config welcome #welcome', 'config welcome-image https://example.com/welcome.gif', 'config modlog #mod-log', 'config giveaway-channel #giveaways', 'config role @Muted Mute'],
+  examples: ['config prefix !', 'config welcome #welcome', 'config goodbye #goodbye', 'config welcome-image https://example.com/welcome.gif', 'config modlog #mod-log', 'config giveaway-channel #giveaways', 'config role @Muted Mute'],
   async execute(ctx) {
     const subcommand = module.exports.subcommands.find((item) => item.name === ctx.subcommand);
     return subcommand.execute(ctx);

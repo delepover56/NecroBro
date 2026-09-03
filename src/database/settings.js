@@ -12,6 +12,7 @@ const { DEFAULT_PREFIX } = require('../config');
 const UPDATABLE = new Set([
   'prefix',
   'welcome_channel_id',
+  'goodbye_channel_id',
   'welcome_image_url',
   'modlog_channel_id',
   'giveaway_channel_id',
