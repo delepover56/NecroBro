@@ -1,0 +1,30 @@
+{
+  "name": "nekrobro",
+  "version": "1.0.0",
+  "description": "Nekro Land suggestion system Discord bot",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js",
+    "deploy": "node --disable-warning=ExperimentalWarning src/deploy-commands.js",
+    "deploy:global": "node --disable-warning=ExperimentalWarning src/deploy-commands.js --global",
+    "lint": "node --check src/index.js && node -e \"require('node:fs').readdirSync('src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('node:child_process').execFileSync(process.execPath,['--check','src/'+f]));console.log('syntax OK')\"",
+    "deploy:clear": "node --disable-warning=ExperimentalWarning src/deploy-commands.js --clear"
+  },
+  "keywords": [
+    "discord",
+    "discord.js",
+    "suggestions",
+    "minecraft"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2"
+  }
+}
