@@ -13,6 +13,7 @@ const rolesRepository = require('../src/database/roles');
 const moderationRepository = require('../src/database/moderation');
 const settingsRepository = require('../src/database/settings');
 const moderationService = require('../src/services/moderationService');
+const roleService = require('../src/services/roleService');
 
 function setup() {
   const guild = makeGuild();
@@ -62,6 +63,7 @@ test('mute applies the configured role and persists with its expiry', async () =
   const record = moderationService.getActiveMute(guild.id, target.id);
   assert.ok(record);
   assert.ok(Math.abs(record.mute_until - (Date.now() + 10 * 3_600_000)) < 2_000);
+  assert.equal(record.reason, 'cheating');
   assert.equal(result.case.action, 'MUTE');
 
   // Muting again replaces the record rather than violating the unique index.
@@ -90,6 +92,28 @@ test('mute evasion: rejoin restores the role and keeps the ORIGINAL expiry', asy
   assert.equal(outcome.restored, true);
   assert.equal(rejoined.roles.cache.has(muteRole.id), true);
   assert.equal(moderationService.getActiveMute(guild.id, target.id).mute_until, original, 'expiry not restarted');
+});
+
+test('rejoin auto-roles preserve Member and Survival, then restore the active Mute role', async () => {
+  const { guild, muteRole, moderator, target } = setup();
+  const memberRole = makeRole(guild, { name: 'Member', position: 5 });
+  const survivalRole = makeRole(guild, { name: 'Survival', position: 6 });
+  rolesRepository.setRole(guild.id, 'MEMBER', memberRole.id, 'test');
+  rolesRepository.setRole(guild.id, 'SURVIVAL', survivalRole.id, 'test');
+  await moderationService.mute({ guild, target, moderator, durationMs: 10 * 3_600_000, reason: 'cheating' });
+
+  target.roles.cache.clear();
+  guild.members.cache.delete(target.id);
+  const rejoined = makeMember(guild, { id: target.id, username: 'target' });
+
+  const joinRoles = await roleService.assignJoinRoles(rejoined);
+  const restored = await moderationService.restoreMuteOnJoin(rejoined);
+
+  assert.deepEqual(joinRoles.assigned, ['MEMBER', 'SURVIVAL']);
+  assert.equal(restored.restored, true);
+  assert.equal(rejoined.roles.cache.has(memberRole.id), true, 'normal Member role is preserved');
+  assert.equal(rejoined.roles.cache.has(survivalRole.id), true, 'normal Survival role is preserved');
+  assert.equal(rejoined.roles.cache.has(muteRole.id), true, 'active persisted mute is restored last');
 });
 
 test('a mute that expired while the member was away is not re-applied', async () => {

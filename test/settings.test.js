@@ -65,4 +65,8 @@ test('every command module loads, validates, and produces a slash payload', () =
   }
   assert.equal(registry.get('help').permission, 'everyone');
   assert.equal(registry.get('vote').permission, 'everyone');
+  // The same registered command objects produce slash payloads and are used by
+  // the prefix dispatcher, so both entry points share this role gate.
+  assert.equal(registry.get('mute').permission, 'moderator');
+  assert.equal(registry.get('unmute').permission, 'moderator');
 });

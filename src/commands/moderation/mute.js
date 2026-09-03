@@ -78,7 +78,7 @@ const mute = {
 const unmute = {
   name: 'unmute',
   category: 'moderation',
-  description: 'Remove the Mute role from a member and close their mute record.',
+  description: 'Remove the Mute role from a member, close their mute record, and notify them by DM.',
   permission: 'moderator',
   cooldown: 2,
   botPermissions: [PermissionFlagsBits.ManageRoles],
@@ -95,6 +95,12 @@ const unmute = {
     if (!check.ok) return ctx.failure(check.reason);
 
     const result = await moderationService.unmute({ guild: ctx.guild, target, moderator: ctx.member, reason });
+    const dmDelivered = await presenters.notifyTarget(target, {
+      guild: ctx.guild,
+      action: ACTIONS.UNMUTE.key,
+      reason,
+      caseNumber: result.case.case_number,
+    });
     log.info(`[${ctx.guildId}] ${ctx.user.id} unmuted ${target.id} (case #${result.case.case_number})`);
 
     const notes = [];
@@ -107,6 +113,7 @@ const unmute = {
       target,
       moderator: ctx.member,
       reason,
+      dmDelivered,
       description: notes.length ? notes.join('\n') : null,
     });
     return ctx.reply(presenters.replyPayload(embed));

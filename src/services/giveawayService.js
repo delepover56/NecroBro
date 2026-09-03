@@ -74,6 +74,44 @@ function mentionList(ids) {
   return ids.map((id) => `<@${id}>`).join(', ');
 }
 
+/**
+ * Best-effort private winner notification. A closed DM or an unavailable user
+ * must never affect the already-persisted giveaway result or public announcement.
+ */
+async function notifyWinners(client, row, winners, { reroll = false } = {}) {
+  if (!Array.isArray(winners) || winners.length === 0) return { delivered: 0, failed: 0 };
+
+  const guild = client.guilds?.cache?.get(row.guild_id) ?? null;
+  const guildName = guild?.name ?? 'the server';
+  const type = typeInfo(row.type);
+  const title = reroll ? 'You won a giveaway reroll!' : 'You won a giveaway!';
+  const results = await Promise.all(
+    winners.map(async (winnerId) => {
+      try {
+        const user = client.users?.cache?.get(winnerId) ?? (await client.users?.fetch?.(winnerId));
+        if (!user?.send || user.bot) return false;
+        const embed = new EmbedBuilder()
+          .setColor(type.color)
+          .setTitle(`🎉 ${title}`)
+          .setDescription(
+            `Congratulations — you were selected in the **${type.label}** giveaway in **${guildName}**.\n` +
+              `**Prize:** ${sanitize(row.prize, LIMITS.prizeMax)}\n` +
+              `**Giveaway:** #${row.id}`,
+          )
+          .setFooter({ text: `${BRAND.name} • Contact staff if you need to claim your prize.` })
+          .setTimestamp(new Date());
+        await user.send({ embeds: [embed], allowedMentions: { parse: [] } });
+        return true;
+      } catch (error) {
+        log.debug(`Could not DM giveaway #${row.id} winner ${winnerId}: ${error?.message ?? error}`);
+        return false;
+      }
+    }),
+  );
+  const delivered = results.filter(Boolean).length;
+  return { delivered, failed: results.length - delivered };
+}
+
 /* ------------------------------------------------------------------ *
  * Rendering
  * ------------------------------------------------------------------ */
@@ -551,7 +589,9 @@ async function endGiveaway({ client, giveawayId, guildId = null, by = null, reso
     log.warn(`Could not announce giveaway #${row.id} winners:`, error);
   }
 
-  return { outcome: 'ended', row: result.row, winners, participantCount: participants.length, announced };
+  const winnerDms = await notifyWinners(client, result.row, winners);
+
+  return { outcome: 'ended', row: result.row, winners, participantCount: participants.length, announced, winnerDms };
 }
 
 /** Cancels an active giveaway (no winners) and marks the message. */
@@ -638,7 +678,9 @@ async function rerollGiveaway({ client, giveawayId, guildId = null, by = null, c
     }
   }
 
-  return { row: result.row, winners: result.winners, participantCount: result.participants.length, announced };
+  const winnerDms = await notifyWinners(client, result.row, result.winners, { reroll: true });
+
+  return { row: result.row, winners: result.winners, participantCount: result.participants.length, announced, winnerDms };
 }
 
 /* ------------------------------------------------------------------ *
@@ -714,6 +756,7 @@ module.exports = {
   buildGiveawayComponents,
   buildMessagePayload,
   buildAnnouncement,
+  notifyWinners,
   pickWinners,
   previousWinners,
   createGiveaway,
