@@ -6,6 +6,7 @@ const settingsRepository = require('../../database/settings');
 const { validatePrefix } = require('../../services/prefixService');
 const roleService = require('../../services/roleService');
 const { missingChannelPermissions } = require('../../utils/permissions');
+const { validImageUrl } = require('./setWelcomeImage');
 
 const ROLE_CHOICES = Object.values(ROLE_TYPES).map((type) => ({ name: type.label, value: type.key }));
 const CHANNEL_PERMISSIONS = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks];
@@ -60,6 +61,23 @@ const role = {
   },
 };
 
+const welcomeImage = {
+  name: 'welcome-image',
+  description: 'Set or clear the bottom welcome image or GIF.',
+  args: [{ name: 'url', type: 'text', description: 'Direct HTTPS/HTTP image or GIF URL. Omit to clear.', required: false, max: 2000 }],
+  async execute(ctx) {
+    const raw = ctx.get('url')?.trim();
+    if (!raw) {
+      settingsRepository.updateSettings(ctx.guildId, { welcome_image_url: null });
+      return ctx.success('The welcome embed image/GIF is now **disabled**.');
+    }
+    const url = validImageUrl(raw);
+    if (!url) return ctx.failure('Provide a valid direct `https://` or `http://` image/GIF URL.');
+    settingsRepository.updateSettings(ctx.guildId, { welcome_image_url: url });
+    return ctx.success('The welcome embed image/GIF has been updated.');
+  },
+};
+
 module.exports = {
   name: 'config',
   category: 'admin',
@@ -70,9 +88,10 @@ module.exports = {
     channelSubcommand('welcome', 'Choose the channel for welcome messages', 'welcome_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
     channelSubcommand('modlog', 'Choose the channel for moderation logs', 'modlog_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
     channelSubcommand('giveaway-channel', 'Choose the channel used for giveaways', 'giveaway_channel_id', [ChannelType.GuildText, ChannelType.GuildAnnouncement]),
+    welcomeImage,
     role,
   ],
-  examples: ['config prefix !', 'config welcome #welcome', 'config modlog #mod-log', 'config giveaway-channel #giveaways', 'config role @Muted Mute'],
+  examples: ['config prefix !', 'config welcome #welcome', 'config welcome-image https://example.com/welcome.gif', 'config modlog #mod-log', 'config giveaway-channel #giveaways', 'config role @Muted Mute'],
   async execute(ctx) {
     const subcommand = module.exports.subcommands.find((item) => item.name === ctx.subcommand);
     return subcommand.execute(ctx);

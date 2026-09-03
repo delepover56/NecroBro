@@ -14,6 +14,7 @@ const moderationRepository = require('../src/database/moderation');
 const settingsRepository = require('../src/database/settings');
 const moderationService = require('../src/services/moderationService');
 const roleService = require('../src/services/roleService');
+const presenters = require('../src/services/moderationPresenters');
 
 function setup() {
   const guild = makeGuild();
@@ -75,6 +76,14 @@ test('mute applies the configured role and persists with its expiry', async () =
   assert.equal(target.roles.cache.has(muteRole.id), false);
   assert.equal(moderationService.getActiveMute(guild.id, target.id), null);
   await assert.rejects(() => moderationService.unmute({ guild, target, moderator }), /not muted/);
+});
+
+test('moderation action embeds show the global expiry date for long mutes', () => {
+  const { guild, moderator, target } = setup();
+  const until = Date.UTC(2027, 0, 2, 3, 4, 5);
+  const embed = presenters.buildActionEmbed({ action: 'MUTE', target, moderator, until });
+  const expires = embed.data.fields.find((field) => field.name === 'Expires');
+  assert.equal(expires.value, 'Saturday, 2 January 2027');
 });
 
 test('mute evasion: rejoin restores the role and keeps the ORIGINAL expiry', async () => {

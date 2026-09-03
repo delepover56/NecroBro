@@ -183,16 +183,24 @@ client.on(Events.MessageCreate, async (message) => {
 client.on(Events.GuildMemberAdd, async (member) => {
   try {
     const roles = await roleService.assignJoinRoles(member);
-    // Reconcile the persisted mute *after* normal join roles.  This deliberately
-    // keeps Member/Survival intact: Discord's category overwrites enforce the
-    // restriction whenever the configured Mute role is present.
-    const restored = await moderationService.restoreMuteOnJoin(member);
     if (roles.skipped.length > 0) {
       log.debug(`Join roles skipped for ${member.id}: ${roles.skipped.map((s) => `${s.type} (${s.reason})`).join('; ')}`);
     }
-    if (!restored.restored) await welcomeService.sendWelcome(member);
   } catch (error) {
-    log.error(`guildMemberAdd handling failed for ${member.id}:`, error);
+    log.error(`Join-role assignment failed for ${member.id}:`, error);
+  }
+
+  try {
+    // This preserves ordinary roles while Discord's overwrites enforce mute.
+    await moderationService.restoreMuteOnJoin(member);
+  } catch (error) {
+    log.error(`Mute restoration failed for ${member.id}:`, error);
+  }
+
+  try {
+    await welcomeService.sendWelcome(member);
+  } catch (error) {
+    log.error(`Welcome handling failed for ${member.id}:`, error);
   }
 });
 

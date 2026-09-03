@@ -1,10 +1,17 @@
 'use strict';
 
 /**
- * Human duration parsing/formatting: "10h", "1d12h", "30m", "2w", "45s".
+ * Human duration parsing/formatting: "10h", "1d12h", "30m", "2w", "1y", "45s".
  */
 
 const UNITS = {
+  // A year is intentionally a fixed 365-day moderation duration, so the
+  // persisted expiry stays a simple timestamp and does not depend on leap years.
+  y: 31_536_000_000,
+  yr: 31_536_000_000,
+  yrs: 31_536_000_000,
+  year: 31_536_000_000,
+  years: 31_536_000_000,
   s: 1_000,
   sec: 1_000,
   secs: 1_000,
@@ -63,6 +70,7 @@ function formatDuration(ms, { maxParts = 2 } = {}) {
   const parts = [];
   let remaining = Math.round(ms / 1000);
   const table = [
+    ['year', 31_536_000],
     ['week', 604_800],
     ['day', 86_400],
     ['hour', 3_600],

@@ -18,6 +18,25 @@ function discordTime(ms, style = 'f') {
   return `<t:${Math.floor(ms / 1000)}:${style}>`;
 }
 
+/** A fixed, global calendar date for long moderation expiries (UTC). */
+function formatUtcDate(ms) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(ms));
+}
+
+/**
+ * Long mutes show their global UTC calendar date. In the final seven days,
+ * Discord's relative timestamp updates itself live ("in 2 days", "in 2 minutes").
+ */
+function formatExpiry(ms, { now = Date.now(), relativeWithinMs = 7 * 86_400_000 } = {}) {
+  return ms - now <= relativeWithinMs ? discordTime(ms, 'R') : formatUtcDate(ms);
+}
+
 /** Wraps text in inline code, escaping backticks. */
 function code(text) {
   return `\`${String(text ?? '').replace(/`/g, 'ˋ')}\``;
@@ -28,4 +47,4 @@ function sanitize(text, max = 1000) {
   return truncate(String(text ?? '').replace(/@(everyone|here)/g, '@​$1'), max);
 }
 
-module.exports = { formatNumber, truncate, discordTime, code, sanitize };
+module.exports = { formatNumber, truncate, discordTime, formatUtcDate, formatExpiry, code, sanitize };

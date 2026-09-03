@@ -26,7 +26,7 @@ function buildWelcomeEmbed(member) {
     tips.push(`• Have an idea? Head to <#${config.suggestions_channel_id}>.`);
   }
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(BRAND.successColor)
     .setAuthor({ name: `Welcome to ${guild.name}!`, iconURL: guild.iconURL() ?? undefined })
     .setThumbnail(user.displayAvatarURL({ size: 256 }))
@@ -36,6 +36,9 @@ function buildWelcomeEmbed(member) {
     )
     .setFooter({ text: `${BRAND.name} • Enjoy your stay` })
     .setTimestamp(new Date());
+  const imageUrl = settingsRepository.getSettings(guild.id)?.welcome_image_url;
+  if (imageUrl) embed.setImage(imageUrl);
+  return embed;
 }
 
 /** Sends the welcome message if a channel is configured. Never throws. */

@@ -4,7 +4,7 @@ const { EmbedBuilder, ChannelType } = require('discord.js');
 
 const { BRAND } = require('../config');
 const { formatDuration } = require('../utils/duration');
-const { discordTime, sanitize } = require('../utils/format');
+const { discordTime, formatExpiry, sanitize } = require('../utils/format');
 const { createLogger } = require('../utils/logger');
 const { missingChannelPermissions } = require('../utils/permissions');
 const { actionInfo } = require('./moderationService');
@@ -177,7 +177,7 @@ function buildActionEmbed({
   if (target) list.push({ name: 'User', value: userLabel(target), inline: true });
   list.push({ name: 'Moderator', value: `<@${userOf(moderator).id}>`, inline: true });
   if (durationMs) list.push({ name: 'Duration', value: formatDuration(durationMs), inline: true });
-  if (until) list.push({ name: 'Expires', value: `${discordTime(until, 'R')}`, inline: true });
+  if (until) list.push({ name: 'Expires', value: formatExpiry(until), inline: true });
   for (const field of fields) list.push(field);
   list.push({ name: 'Reason', value: displayReason(reason) });
   embed.addFields(list);

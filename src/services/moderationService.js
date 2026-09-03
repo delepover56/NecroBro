@@ -6,7 +6,7 @@ const { BRAND, ROLE_TYPES } = require('../config');
 const moderationRepository = require('../database/moderation');
 const settingsRepository = require('../database/settings');
 const { formatDuration } = require('../utils/duration');
-const { discordTime, sanitize } = require('../utils/format');
+const { discordTime, formatExpiry, sanitize } = require('../utils/format');
 const { createLogger } = require('../utils/logger');
 const { roleState } = require('../utils/permissions');
 const channelService = require('./channelService');
@@ -85,7 +85,7 @@ function buildCaseEmbed(caseRow) {
     fields.push({ name: 'Duration', value: formatDuration(caseRow.duration_ms), inline: true });
   }
   if (caseRow.expires_at) {
-    fields.push({ name: 'Expires', value: discordTime(caseRow.expires_at, 'R'), inline: true });
+    fields.push({ name: 'Expires', value: formatExpiry(caseRow.expires_at), inline: true });
   }
   if (caseRow.metadata?.channelId) {
     fields.push({ name: 'Channel', value: `<#${caseRow.metadata.channelId}>`, inline: true });
