@@ -118,17 +118,6 @@ function listDue(now = Date.now()) {
     .map(hydrate);
 }
 
-/** Recently finished giveaways in a guild (for reroll hints). */
-function listRecentEnded(guildId, { limit = 5 } = {}) {
-  return prepare(
-    `SELECT ${WITH_COUNT} FROM giveaways g
-      WHERE g.guild_id = ? AND g.status = 'ENDED'
-      ORDER BY g.ended_at DESC, g.id DESC LIMIT ?`,
-  )
-    .all(guildId, limit)
-    .map(hydrate);
-}
-
 /* ------------------------------------------------------------------ *
  * Entries
  * ------------------------------------------------------------------ */
@@ -235,7 +224,6 @@ module.exports = {
   listActive,
   listActiveInChannel,
   listDue,
-  listRecentEnded,
   addEntry,
   removeEntry,
   hasEntry,
