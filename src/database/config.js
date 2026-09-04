@@ -17,6 +17,9 @@ const COLUMNS = [
   'submission_category_id',
   'staff_log_channel_id',
   'panel_message_id',
+  'ticket_channel_id',
+  'ticket_category_id',
+  'ticket_panel_message_id',
 ];
 
 /** Converts a raw row into a friendlier object (staff_role_ids becomes an array). */

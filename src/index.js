@@ -9,6 +9,7 @@ const { closeDatabase, initDatabase } = require('./database/database');
 const configRepository = require('./database/config');
 const settingsRepository = require('./database/settings');
 const suggestionRepository = require('./database/suggestions');
+const ticketRepository = require('./database/tickets');
 const channelService = require('./services/channelService');
 const moderationService = require('./services/moderationService');
 const prefixService = require('./services/prefixService');
@@ -231,6 +232,10 @@ client.on(Events.ChannelDelete, (channel) => {
     log.error('Nuke detection failed for a deleted channel:', error),
   );
   try {
+    if (ticketRepository.getTicketByChannel(channel.id)) {
+      ticketRepository.deleteTicket(channel.id);
+      log.info(`Ticket record for deleted channel ${channel.id} was removed.`);
+    }
     if (configRepository.getTempChannel(channel.id)) {
       configRepository.deleteTempChannel(channel.id);
       log.info(`Draft channel ${channel.id} was deleted manually; record removed.`);
@@ -243,6 +248,11 @@ client.on(Events.ChannelDelete, (channel) => {
       if (config.submission_category_id === channel.id) patch.submission_category_id = null;
       if (config.voting_channel_id === channel.id) patch.voting_channel_id = null;
       if (config.staff_log_channel_id === channel.id) patch.staff_log_channel_id = null;
+      if (config.ticket_channel_id === channel.id) {
+        patch.ticket_channel_id = null;
+        patch.ticket_panel_message_id = null;
+      }
+      if (config.ticket_category_id === channel.id) patch.ticket_category_id = null;
       if (config.suggestions_channel_id === channel.id) {
         patch.suggestions_channel_id = null;
         patch.panel_message_id = null;

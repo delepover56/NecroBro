@@ -149,6 +149,13 @@ const IDS = {
   PANEL_CREATE: 'sg:panel:create',
   TEMP_SUBMIT: 'sg:temp:submit',
   TEMP_CANCEL: 'sg:temp:cancel',
+  TICKET_OPEN: 'tk:open',
+  TICKET_MODAL: 'tk:modal',
+  TICKET_CLOSE: 'tk:close',
+  TICKET_DELETE: 'tk:delete',
+  TICKET_PLATFORM: 'tk:platform',
+  TICKET_DETAILS: 'tk:details',
+  TICKET_FILES: 'tk:files',
   SUGGESTION_MODAL: 'sg:modal:suggestion',
   VOTE: 'sg:vote', // sg:vote:<UP|DOWN>:<suggestionId>
   STAFF_MANAGE: 'sg:staff:manage', // sg:staff:manage:<suggestionId>
@@ -278,6 +285,7 @@ const COMPONENT_NAMESPACES = {
   leaderboard: 'lb',
   giveaway: 'gw',
   moderation: 'mod',
+  tickets: 'tk',
 };
 
 module.exports = {

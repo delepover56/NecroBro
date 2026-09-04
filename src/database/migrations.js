@@ -400,6 +400,34 @@ const MIGRATIONS = [
       `);
     },
   },
+  {
+    version: 8,
+    name: 'ticket_system',
+    up(db) {
+      db.exec(`
+        ALTER TABLE guild_config ADD COLUMN ticket_channel_id TEXT;
+        ALTER TABLE guild_config ADD COLUMN ticket_category_id TEXT;
+        ALTER TABLE guild_config ADD COLUMN ticket_panel_message_id TEXT;
+
+        CREATE TABLE tickets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          guild_id TEXT NOT NULL,
+          channel_id TEXT NOT NULL UNIQUE,
+          creator_id TEXT NOT NULL,
+          type TEXT NOT NULL CHECK (type IN ('REPORT', 'SUPPORT', 'APPEAL')),
+          platform TEXT NOT NULL CHECK (platform IN ('MINECRAFT_SURVIVAL', 'DISCORD')),
+          details TEXT NOT NULL,
+          attachment_urls TEXT NOT NULL DEFAULT '[]',
+          status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
+          created_at INTEGER NOT NULL,
+          closed_at INTEGER,
+          closed_by TEXT
+        );
+        CREATE UNIQUE INDEX idx_tickets_open_creator ON tickets (guild_id, creator_id) WHERE status = 'OPEN';
+        CREATE INDEX idx_tickets_guild_status ON tickets (guild_id, status, created_at);
+      `);
+    },
+  },
 ];
 
 /** Applies every migration that has not yet run against `db`. */

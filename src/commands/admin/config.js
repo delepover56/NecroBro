@@ -98,6 +98,13 @@ module.exports = {
             `${settings.chat_cash_min}-${settings.chat_cash_max} cash at ${Math.round(settings.chat_cash_chance * 100)}%, ` +
             `every ${settings.chat_cooldown_seconds}s)`,
         },
+        {
+          name: 'Tickets',
+          value: suggestions?.ticket_channel_id && suggestions?.ticket_category_id
+            ? `**Panel channel:** ${describeChannel(guild, suggestions.ticket_channel_id)}\n` +
+              `**Private category:** ${describeChannel(guild, suggestions.ticket_category_id)}`
+            : '❌ not set up — run `/setup-tickets`',
+        },
         { name: 'Automod', value: automodSummary(guild.id) },
       )
       .setFooter({ text: 'Fix roles with setrole • channels with setwelcome / setmodlog / setgiveawaychannel' });

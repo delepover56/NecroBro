@@ -32,6 +32,7 @@ const MODULES = [
   require('./suggestionModal'),
   require('./suggestionVoting'),
   require('./suggestionStaff'),
+  require('./tickets'),
   require('./help'),
   ...loadOptional('./leaderboard'),
   ...loadOptional('./giveaway'),
