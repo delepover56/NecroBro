@@ -31,3 +31,12 @@ test('ticket modal offers platform selection, details, and optional file uploads
   assert.equal(json.components[1].component.type, 4);
   assert.equal(json.components[2].component.type, 19);
 });
+
+test('ticket embeds do not turn submitted uploads into attachment-link fields', () => {
+  const { ticketEmbed } = require('../src/services/ticketService');
+  const embed = ticketEmbed({
+    id: 1, creator_id: 'member', type: 'REPORT', platform: 'DISCORD', details: 'Detailed report.',
+    attachment_urls: ['https://cdn.example/proof.png'], created_at: Date.now(),
+  }, { username: 'reporter' }).toJSON();
+  assert.ok(!embed.fields.some((field) => field.name === 'Attachments'));
+});

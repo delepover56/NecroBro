@@ -22,9 +22,6 @@ function overwrites(guild, userId, staffRoleIds) {
 }
 
 function ticketEmbed(ticket, user) {
-  const attachmentText = ticket.attachment_urls.length
-    ? ticket.attachment_urls.map((url, index) => `[Attachment ${index + 1}](${url})`).join('\n')
-    : 'None';
   return new EmbedBuilder()
     .setColor(TICKET_COLOR)
     .setTitle(`${TYPE_LABELS[ticket.type]} Ticket`)
@@ -32,7 +29,6 @@ function ticketEmbed(ticket, user) {
       { name: 'User', value: `<@${ticket.creator_id}> (${user.username})`, inline: true },
       { name: 'Platform', value: PLATFORM_LABELS[ticket.platform], inline: true },
       { name: 'Details', value: ticket.details.slice(0, 1024) },
-      { name: 'Attachments', value: attachmentText.slice(0, 1024) },
     )
     .setTimestamp(ticket.created_at)
     .setFooter({ text: `Ticket #${ticket.id}` });
@@ -61,6 +57,12 @@ async function createTicket(guild, member, { type, platform, details, attachment
   });
   const ticket = ticketRepository.createTicket({ guildId: guild.id, channelId: channel.id, creatorId: member.id, type, platform, details, attachmentUrls });
   await channel.send({ embeds: [ticketEmbed(ticket, member.user)], components: ticketControls(), allowedMentions: { users: [member.id], parse: [] } });
+  // Re-upload the submitted files as normal channel attachments immediately
+  // after the embed, so Discord displays images/videos natively instead of
+  // reducing them to "Attachment 1" links inside the ticket information.
+  if (attachmentUrls.length > 0) {
+    await channel.send({ files: attachmentUrls, allowedMentions: { parse: [] } });
+  }
   return { ticket, channel };
 }
 
