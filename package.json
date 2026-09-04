@@ -1,7 +1,7 @@
 {
   "name": "nekrobro",
   "version": "1.0.0",
-  "description": "NekroBro — Nekro Land Discord bot: suggestions, moderation, giveaways, economy, leaderboards, automod",
+  "description": "𝐍𝐞𝐤𝐫𝐨𝐁𝐫𝐨 — Nekro Land Discord bot: suggestions, moderation, giveaways, economy, leaderboards, automod",
   "main": "src/index.js",
   "type": "commonjs",
   "engines": {

@@ -39,8 +39,8 @@ const env = {
 
 /** Branding used across every embed / panel. */
 const BRAND = {
-  name: 'Nekro Land',
-  panelTitle: '💡 Nekro Land Suggestions',
+  name: '𝐍𝐞𝐤𝐫𝐨𝐁𝐫𝐨',
+  panelTitle: '💡 𝐍𝐞𝐤𝐫𝐨𝐁𝐫𝐨 Suggestions',
   panelDescription:
     'Have an idea for Nekro Land? Suggest new features, improvements, events, ' +
     'or changes and let the community help decide what comes next.',

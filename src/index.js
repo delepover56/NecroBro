@@ -21,7 +21,7 @@ const { createLogger } = require('./utils/logger');
 const log = createLogger('bot');
 
 /**
- * NekroBro -- process entry point.
+ * 𝐍𝐞𝐤𝐫𝐨𝐁𝐫𝐨 -- process entry point.
  *
  * Responsibilities kept here and nowhere else: creating the client, loading
  * commands, wiring gateway events to services, restart recovery, the
@@ -150,7 +150,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   }
   scheduler.start(readyClient);
 
-  log.info(`NekroBro online with ${registry.size} command(s).`);
+  log.info(`𝐍𝐞𝐤𝐫𝐨𝐁𝐫𝐨 online with ${registry.size} command(s).`);
 });
 
 client.on(Events.GuildCreate, async (guild) => {
