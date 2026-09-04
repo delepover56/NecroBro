@@ -184,6 +184,12 @@ client.on(Events.MessageCreate, async (message) => {
 
 client.on(Events.GuildMemberAdd, async (member) => {
   try {
+    await automodService?.handleMemberJoin?.(member);
+  } catch (error) {
+    log.error(`Raid detection failed for ${member.id}:`, error);
+  }
+
+  try {
     const roles = await roleService.assignJoinRoles(member);
     if (roles.skipped.length > 0) {
       log.debug(`Join roles skipped for ${member.id}: ${roles.skipped.map((s) => `${s.type} (${s.reason})`).join('; ')}`);
@@ -221,6 +227,9 @@ client.on(Events.GuildMemberRemove, async (member) => {
 /** A deleted channel must never leave a dangling pointer in the database. */
 client.on(Events.ChannelDelete, (channel) => {
   if (!channel.guild) return;
+  void automodService?.handleSecurityEvent?.(channel.guild, 'channel deleted').catch((error) =>
+    log.error('Nuke detection failed for a deleted channel:', error),
+  );
   try {
     if (configRepository.getTempChannel(channel.id)) {
       configRepository.deleteTempChannel(channel.id);
@@ -264,6 +273,9 @@ client.on(Events.ChannelDelete, (channel) => {
 
 /** Deleted roles are reported, never silently ignored. */
 client.on(Events.GuildRoleDelete, (role) => {
+  void automodService?.handleSecurityEvent?.(role.guild, 'role deleted').catch((error) =>
+    log.error('Nuke detection failed for a deleted role:', error),
+  );
   try {
     const roles = roleService.getConfiguredRoles(role.guild);
     for (const [type, state] of Object.entries(roles)) {
@@ -277,6 +289,19 @@ client.on(Events.GuildRoleDelete, (role) => {
   } catch (error) {
     log.error('Failed to handle a role deletion:', error);
   }
+});
+
+client.on(Events.ChannelCreate, (channel) => {
+  if (!channel.guild) return;
+  void automodService?.handleSecurityEvent?.(channel.guild, 'channel created').catch((error) =>
+    log.error('Nuke detection failed for a created channel:', error),
+  );
+});
+
+client.on(Events.GuildRoleCreate, (role) => {
+  void automodService?.handleSecurityEvent?.(role.guild, 'role created').catch((error) =>
+    log.error('Nuke detection failed for a created role:', error),
+  );
 });
 
 /** Keep suggestion/panel/giveaway pointers honest when a message is deleted. */

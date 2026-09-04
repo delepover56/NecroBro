@@ -27,6 +27,27 @@ test('giveaway channel is persisted in guild settings', () => {
   assert.equal(settingsRepository.getSettings('g1').giveaway_channel_id, '123456789012345678');
 });
 
+test('economy configuration fields are persisted in guild settings', () => {
+  settingsRepository.updateSettings('economy-guild', {
+    economy_enabled: 0,
+    currency_name: 'Credits',
+    currency_symbol: '✦',
+    chat_rewards_enabled: 0,
+    chat_xp_min: 10,
+    chat_xp_max: 20,
+    chat_cash_min: 2,
+    chat_cash_max: 6,
+    chat_cash_chance: 0.4,
+    chat_cooldown_seconds: 90,
+    chat_min_length: 12,
+  });
+  const settings = settingsRepository.getSettings('economy-guild');
+  assert.equal(settings.currency_name, 'Credits');
+  assert.equal(settings.chat_xp_max, 20);
+  assert.equal(settings.chat_cash_chance, 0.4);
+  assert.equal(settings.chat_cooldown_seconds, 90);
+});
+
 test('validatePrefix rejects ambiguous or dangerous prefixes', () => {
   assert.equal(validatePrefix('!'), null);
   assert.equal(validatePrefix('?'), null);
@@ -69,6 +90,9 @@ test('every command module loads, validates, and produces a slash payload', () =
     assert.equal(command.permission, 'admin', `${name} must be admin-only`);
   }
   assert.equal(registry.get('setgiveawaychannel').permission, 'admin');
+  for (const subcommand of ['economy-enabled', 'currency', 'chat-rewards', 'chat-xp', 'chat-cash', 'chat-cash-chance', 'chat-cooldown', 'chat-min-length']) {
+    assert.ok(registry.get('config').subcommands.some((sub) => sub.name === subcommand), `missing config ${subcommand}`);
+  }
   assert.equal(registry.get('help').permission, 'everyone');
   assert.equal(registry.get('vote').permission, 'everyone');
   assert.equal(registry.get('settings')?.name, 'status');

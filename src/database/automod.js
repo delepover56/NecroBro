@@ -20,6 +20,9 @@ const BOOLEAN_COLUMNS = [
   'repeat_enabled',
   'caps_enabled',
   'mentions_enabled',
+  'image_spam_enabled',
+  'raid_enabled',
+  'nuke_enabled',
 ];
 
 const INTEGER_COLUMNS = [
@@ -33,9 +36,17 @@ const INTEGER_COLUMNS = [
   'timeout_threshold',
   'timeout_minutes',
   'violation_window_minutes',
+  'image_spam_max_messages',
+  'image_spam_interval_seconds',
+  'raid_max_joins',
+  'raid_interval_seconds',
+  'nuke_max_events',
+  'nuke_interval_seconds',
 ];
 
-const UPDATABLE = new Set([...JSON_COLUMNS, ...BOOLEAN_COLUMNS, ...INTEGER_COLUMNS]);
+const ENUM_COLUMNS = ['raid_action'];
+
+const UPDATABLE = new Set([...JSON_COLUMNS, ...BOOLEAN_COLUMNS, ...INTEGER_COLUMNS, ...ENUM_COLUMNS]);
 
 function parseJsonArray(text) {
   if (typeof text !== 'string') return [];
@@ -63,6 +74,10 @@ function serialize(column, value) {
     return JSON.stringify([...new Set(value.map((item) => String(item)))]);
   }
   if (BOOLEAN_COLUMNS.includes(column)) return value ? 1 : 0;
+  if (column === 'raid_action') {
+    if (!['ALERT', 'KICK'].includes(value)) throw new TypeError('automod.raid_action must be ALERT or KICK.');
+    return value;
+  }
   const number = Number(value);
   if (!Number.isInteger(number)) throw new TypeError(`automod.${column} must be an integer.`);
   return number;

@@ -381,6 +381,25 @@ const MIGRATIONS = [
       db.exec('ALTER TABLE guild_settings ADD COLUMN goodbye_channel_id TEXT');
     },
   },
+  {
+    version: 7,
+    name: 'automod_raid_image_and_nuke_protection',
+    up(db) {
+      db.exec(`
+        ALTER TABLE automod_settings ADD COLUMN image_spam_enabled INTEGER NOT NULL DEFAULT 1;
+        ALTER TABLE automod_settings ADD COLUMN image_spam_max_messages INTEGER NOT NULL DEFAULT 4;
+        ALTER TABLE automod_settings ADD COLUMN image_spam_interval_seconds INTEGER NOT NULL DEFAULT 10;
+        ALTER TABLE automod_settings ADD COLUMN raid_enabled INTEGER NOT NULL DEFAULT 1;
+        ALTER TABLE automod_settings ADD COLUMN raid_max_joins INTEGER NOT NULL DEFAULT 10;
+        ALTER TABLE automod_settings ADD COLUMN raid_interval_seconds INTEGER NOT NULL DEFAULT 30;
+        ALTER TABLE automod_settings ADD COLUMN raid_action TEXT NOT NULL DEFAULT 'ALERT'
+          CHECK (raid_action IN ('ALERT', 'KICK'));
+        ALTER TABLE automod_settings ADD COLUMN nuke_enabled INTEGER NOT NULL DEFAULT 1;
+        ALTER TABLE automod_settings ADD COLUMN nuke_max_events INTEGER NOT NULL DEFAULT 5;
+        ALTER TABLE automod_settings ADD COLUMN nuke_interval_seconds INTEGER NOT NULL DEFAULT 15;
+      `);
+    },
+  },
 ];
 
 /** Applies every migration that has not yet run against `db`. */

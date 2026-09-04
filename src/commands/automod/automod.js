@@ -101,6 +101,14 @@ function buildStatusEmbed(guild, s) {
           `**${s.timeout_threshold}+:** delete + warning + **${s.timeout_minutes} min** timeout`,
       },
       {
+        name: 'Server protection',
+        value: [
+          `**Image spam:** ${onOff(s.image_spam_enabled)} — > ${s.image_spam_max_messages} images / ${s.image_spam_interval_seconds}s`,
+          `**Join raids:** ${onOff(s.raid_enabled)} — > ${s.raid_max_joins} joins / ${s.raid_interval_seconds}s (${s.raid_action.toLowerCase()})`,
+          `**Nuke detection:** ${onOff(s.nuke_enabled)} — > ${s.nuke_max_events} channel/role events / ${s.nuke_interval_seconds}s`,
+        ].join('\n'),
+      },
+      {
         name: 'Allowed domains',
         value: domains.slice(0, 1024),
         inline: false,
@@ -296,6 +304,44 @@ async function handleMentions(ctx) {
   ]);
 }
 
+async function handleImageSpam(ctx) {
+  const enabled = ctx.get('state') === 'on';
+  const patch = { image_spam_enabled: enabled };
+  if (ctx.get('images') !== null) patch.image_spam_max_messages = ctx.get('images');
+  if (ctx.get('seconds') !== null) patch.image_spam_interval_seconds = ctx.get('seconds');
+  const s = automodService.updateSettings(ctx.guild.id, patch);
+  audit(ctx, `image_spam_enabled=${enabled} max=${s.image_spam_max_messages} interval=${s.image_spam_interval_seconds}s`);
+  return confirm(ctx, `Image-spam filter ${enabled ? 'on' : 'off'}`, `Trigger: more than **${s.image_spam_max_messages}** image messages within **${s.image_spam_interval_seconds}s**.`);
+}
+
+async function handleRaid(ctx) {
+  const enabled = ctx.get('state') === 'on';
+  const action = ctx.get('action')?.toUpperCase();
+  const patch = { raid_enabled: enabled };
+  if (ctx.get('joins') !== null) patch.raid_max_joins = ctx.get('joins');
+  if (ctx.get('seconds') !== null) patch.raid_interval_seconds = ctx.get('seconds');
+  if (action) patch.raid_action = action;
+  const s = automodService.updateSettings(ctx.guild.id, patch);
+  audit(ctx, `raid_enabled=${enabled} max=${s.raid_max_joins} interval=${s.raid_interval_seconds}s action=${s.raid_action}`);
+  return confirm(ctx, `Raid protection ${enabled ? 'on' : 'off'}`, [
+    `Trigger: more than **${s.raid_max_joins}** joins within **${s.raid_interval_seconds}s**.`,
+    `Response: **${s.raid_action.toLowerCase()}**${s.raid_action === 'KICK' ? ' the latest joining member.' : ' staff in the mod-log channel.'}`,
+  ]);
+}
+
+async function handleNuke(ctx) {
+  const enabled = ctx.get('state') === 'on';
+  const patch = { nuke_enabled: enabled };
+  if (ctx.get('events') !== null) patch.nuke_max_events = ctx.get('events');
+  if (ctx.get('seconds') !== null) patch.nuke_interval_seconds = ctx.get('seconds');
+  const s = automodService.updateSettings(ctx.guild.id, patch);
+  audit(ctx, `nuke_enabled=${enabled} max=${s.nuke_max_events} interval=${s.nuke_interval_seconds}s`);
+  return confirm(ctx, `Nuke detection ${enabled ? 'on' : 'off'}`, [
+    `Alert after more than **${s.nuke_max_events}** channel/role changes in **${s.nuke_interval_seconds}s**.`,
+    'A bot cannot stop members with equal or higher permissions; check the Discord Audit Log immediately.',
+  ]);
+}
+
 async function handleIgnoreChannel(ctx) {
   const action = ctx.get('action');
   const channel = ctx.get('channel');
@@ -459,6 +505,35 @@ module.exports = {
       ],
     },
     {
+      name: 'imagespam',
+      description: 'Toggle image/GIF spam detection and set thresholds.',
+      aliases: ['image-spam', 'images'],
+      args: [
+        { name: 'state', type: 'string', description: 'on or off.', required: true, choices: ON_OFF },
+        { name: 'images', type: 'integer', description: 'Max image messages allowed (1-30).', required: false, min: 1, max: 30 },
+        { name: 'seconds', type: 'integer', description: 'Interval length (2-120 seconds).', required: false, min: 2, max: 120 },
+      ],
+    },
+    {
+      name: 'raid',
+      description: 'Toggle join-raid detection and set its response.',
+      args: [
+        { name: 'state', type: 'string', description: 'on or off.', required: true, choices: ON_OFF },
+        { name: 'joins', type: 'integer', description: 'Max joins allowed (2-100).', required: false, min: 2, max: 100 },
+        { name: 'seconds', type: 'integer', description: 'Interval length (5-300 seconds).', required: false, min: 5, max: 300 },
+        { name: 'action', type: 'string', description: 'alert staff or kick latest join.', required: false, choices: [{ name: 'alert', value: 'alert' }, { name: 'kick', value: 'kick' }] },
+      ],
+    },
+    {
+      name: 'nuke',
+      description: 'Toggle channel/role destruction burst detection.',
+      args: [
+        { name: 'state', type: 'string', description: 'on or off.', required: true, choices: ON_OFF },
+        { name: 'events', type: 'integer', description: 'Max changes allowed (2-100).', required: false, min: 2, max: 100 },
+        { name: 'seconds', type: 'integer', description: 'Interval length (5-300 seconds).', required: false, min: 5, max: 300 },
+      ],
+    },
+    {
       name: 'ignorechannel',
       description: 'Add or remove a channel (or category) automod should skip.',
       aliases: ['ignore-channel', 'channel'],
@@ -538,6 +613,12 @@ module.exports = {
         return handleCaps(ctx);
       case 'mentions':
         return handleMentions(ctx);
+      case 'imagespam':
+        return handleImageSpam(ctx);
+      case 'raid':
+        return handleRaid(ctx);
+      case 'nuke':
+        return handleNuke(ctx);
       case 'ignorechannel':
         return handleIgnoreChannel(ctx);
       case 'ignorerole':
